@@ -1,0 +1,38 @@
+[hekad]
+base_dir = "."
+share_dir = "."
+# 8MB
+max_message_size = 8388608
+
+[RstEncoder]
+
+[TestInput]
+type = "S3SplitFileInput"
+s3_bucket = "FIXME-replace-with-actual-data-location"
+s3_bucket_prefix = "telemetry"
+s3_worker_count = 50
+schema_file = "examples/export/schema.telemetry_export.json"
+
+# For observing progress
+[DashboardOutput]
+address = "127.0.0.1:4352"
+static_directory = "build/heka/dasher"
+ticker_interval = 10
+
+[CustomJsonEncoder]
+type = "SandboxEncoder"
+filename = "examples/export/export.lua"
+output_limit = 8388608
+memory_limit = 83886080
+
+[ArchiveSampleOutput]
+# Without a bucket name, we just output to local files.
+type = "S3SplitFileOutput"
+path = "examples/export/out"
+encoder = "CustomJsonEncoder"
+message_matcher = "Type == 'telemetry' && Fields[sampleId] == 1"
+flush_interval = 5000
+max_file_size = 500000000
+max_file_age = 90000000
+schema_file = "examples/export/schema.telemetry_client.json"
+s3_bucket_prefix = "telemetry"

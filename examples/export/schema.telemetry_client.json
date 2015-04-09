@@ -1,0 +1,7 @@
+{
+  "version": 1,
+  "dimensions": [
+    { "field_name": "clientId", "allowed_values": "*" }
+  ]
+}
+
