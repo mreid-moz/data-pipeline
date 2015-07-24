@@ -1,0 +1,55 @@
+[hekad]
+maxprocs = 8
+base_dir = "/mnt/telemetry/output"
+share_dir = "/mnt/telemetry/heka-0_10_0-linux-amd64/share/heka"
+# 8MB
+max_message_size = 8388608
+
+[CrashInput]
+type = "S3SplitFileInput"
+s3_bucket = "net-mozaws-prod-us-west-2-pipeline-data"
+s3_bucket_prefix = "telemetry-2"
+s3_worker_count = 16
+s3_read_timeout = 180
+schema_file = "schema.crash.json"
+decoder = "ProtobufDecoder"
+
+[ExecInput]
+type = "S3SplitFileInput"
+s3_bucket = "net-mozaws-prod-us-west-2-pipeline-data"
+s3_bucket_prefix = "telemetry-executive-summary"
+s3_worker_count = 16
+s3_read_timeout = 180
+schema_file = "schema.exec.json"
+decoder = "ProtobufDecoder"
+
+[FirefoxMonthlyDashboard]
+type = "SandboxFilter"
+filename = "lua_filters/firefox_monthly_dashboard.lua"
+message_matcher = "(Logger == 'fx' && Type == 'executive_summary') || (Type == 'telemetry' && Fields[docType] == 'crash')"
+output_limit = 0
+memory_limit = 0
+ticker_interval = 0
+preserve_data = true
+timer_event_on_shutdown = true
+
+    [FirefoxMonthlyDashboard.config]
+    items = 100000000
+
+[FirefoxWeeklyDashboard]
+type = "SandboxFilter"
+filename = "lua_filters/firefox_weekly_dashboard.lua"
+message_matcher = "(Logger == 'fx' && Type == 'executive_summary') || (Type == 'telemetry' && Fields[docType] == 'crash')"
+output_limit = 0
+memory_limit = 0
+ticker_interval = 0
+preserve_data = true
+timer_event_on_shutdown = true
+
+    [FirefoxWeeklyDashboard.config]
+    items = 100000000
+
+[DashboardOutput]
+address = ":8080"
+static_directory = "/mnt/telemetry/heka-0_10_0-linux-amd64/share/heka/dasher"
+ticker_interval = 10
